@@ -1,4 +1,4 @@
-#ifdef _WIN32 || _WIN64
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #else
 // TODO: Implement also for POSIX
@@ -19,7 +19,7 @@ static long diff_milliseconds(LARGE_INTEGER* timespan, LARGE_INTEGER* freq) {
     elapsed.QuadPart = timespan->QuadPart;
     elapsed.QuadPart *= 1000;
     elapsed.QuadPart /= freq->QuadPart;
-    return elapsed.QuadPart;
+    return (long)elapsed.QuadPart;
 }
 
 Stopwatch* stopwatch_init() {
@@ -38,7 +38,7 @@ void stopwatch_start(Stopwatch* instance) {
 
 long stopwatch_stop(Stopwatch* instance) {
     if (!instance->running)
-        return;
+        return -1;
     instance->running = 0;
     LARGE_INTEGER stop_time;
     QueryPerformanceCounter(&stop_time);

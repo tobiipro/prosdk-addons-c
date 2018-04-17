@@ -8,8 +8,11 @@
 extern "C" {
 #endif
 
+extern int point2_equal(const TobiiResearchNormalizedPoint2D* first, const TobiiResearchNormalizedPoint2D* second);
+
 extern void point3_set_zero(TobiiResearchPoint3D* point);
 extern void point3_add(TobiiResearchPoint3D* to, const TobiiResearchPoint3D* from);
+extern void point3_sub(TobiiResearchPoint3D* lhs, const TobiiResearchPoint3D* rhs);
 extern void point3_mul(TobiiResearchPoint3D* point, float factor);
 
 typedef TobiiResearchPoint3D TobiiResearchVector3D;
@@ -17,10 +20,14 @@ typedef TobiiResearchPoint3D TobiiResearchVector3D;
 extern void vector3_create_from_points(TobiiResearchVector3D* vector,
     const TobiiResearchPoint3D* from, const TobiiResearchPoint3D* to);
 extern void vector3_set_zero(TobiiResearchVector3D* vector);
+extern void vector3_add(TobiiResearchVector3D* to, const TobiiResearchVector3D* from);
+extern void vector3_mul(TobiiResearchVector3D* point, float factor);
+extern double vector3_dot_product(const TobiiResearchVector3D* first, const TobiiResearchVector3D* second);
+extern double vector3_magnitude(const TobiiResearchVector3D* vector);
 extern void vector3_normalize(TobiiResearchVector3D* vector);
 extern float vector3_angle(const TobiiResearchVector3D* first, const TobiiResearchVector3D* second);
 
-extern TobiiResearchPoint3D calculate_normalized_point2_to_point3(
+extern void calculate_normalized_point2_to_point3(TobiiResearchPoint3D* result,
     const TobiiResearchDisplayArea* display_area, const TobiiResearchNormalizedPoint2D* target_point);
 
 #ifdef __cplusplus

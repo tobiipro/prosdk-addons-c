@@ -13,6 +13,7 @@ typedef enum {
     CALIBRATION_VALIDATION_STATUS_INVALID_EYETRACKER,
     CALIBRATION_VALIDATION_STATUS_INVALID_SAMPLE_COUNT,
     CALIBRATION_VALIDATION_STATUS_INVALID_TIMEOUT,
+    CALIBRATION_VALIDATION_STATUS_REUSE_OR_UNINITIALIZED_VALIDATOR,
     CALIBRATION_VALIDATION_STATUS_NOT_IN_VALIDATION_MODE,
     CALIBRATION_VALIDATION_STATUS_ALREADY_IN_VALIDATION_MODE,
     CALIBRATION_VALIDATION_STATUS_OPERATION_NOT_ALLOWED_DURING_DATA_COLLECTION,
@@ -47,12 +48,11 @@ typedef struct {
 typedef struct CalibrationValidator CalibrationValidator;
 
 extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_init(
-    CalibrationValidator* validator, const char* address, size_t sample_count, int timeout);
+    const char* address, size_t sample_count, int timeout, CalibrationValidator** validator);
 extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_init_default(
-    CalibrationValidator* validator, const char* address);
+    const char* address, CalibrationValidator** validator);
 extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_destroy(
     CalibrationValidator* validator);
-// TODO: Implement status to string function
 
 extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_enter_validation_mode(
     CalibrationValidator* validator);
@@ -66,6 +66,9 @@ extern CalibrationValidationStatus tobii_research_screen_based_calibration_valid
     CalibrationValidator* validator, const TobiiResearchNormalizedPoint2D* screen_point);
 extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_compute(
     CalibrationValidator* validator, CalibrationValidationResult** result);
+
+// TODO: Help function: convert status to string.
+// TODO: Help function: Free/destroy CalibrationValidationResult structure.
 
 #ifdef __cplusplus
 }
