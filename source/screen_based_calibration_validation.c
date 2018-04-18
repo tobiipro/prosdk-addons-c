@@ -1,3 +1,19 @@
+/*
+Copyright 2018 Tobii AB
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -30,7 +46,7 @@ typedef struct {
 
 struct CalibrationValidator {
     TobiiResearchEyeTracker* eyetracker;
-    CalibrationValidationState state;
+    CalibrationValidationState state;  // TODO: Investigate if synchronization is needed for state variable
     size_t sample_count;
     int timeout;
 
@@ -41,8 +57,6 @@ struct CalibrationValidator {
     CollectedDataPoint **collected_points;
     size_t collected_points_count;
     size_t collected_points_capacity;
-
-    // TODO: Investigate if synchronization is needed
 
     Stopwatch* stopwatch;
 };
@@ -73,9 +87,6 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_i
     }
     if (!(timeout >= TIMEOUT_MIN && timeout <= TIMEOUT_MAX)) {
         return CALIBRATION_VALIDATION_STATUS_INVALID_TIMEOUT;
-    }
-    if (*validator != NULL) {
-        return CALIBRATION_VALIDATION_STATUS_REUSE_OR_UNINITIALIZED_VALIDATOR;
     }
 
     *validator = calloc(1, sizeof(CalibrationValidator));
@@ -122,7 +133,6 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_d
     destroy_data_point(validator->new_point);
     validator->new_point = NULL;
     destroy_collected_data(validator);
-    // TODO: Free or destroy eyetracker object?
     free(validator->stopwatch);
     free(validator);
 
@@ -290,7 +300,7 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
         TobiiResearchPoint3D gaze_point_right_mean;
         point3_set_zero(&gaze_point_right_mean);
 
-        for(size_t j = 0; j < collected_data_point->gaze_data_count; ++j) {
+        for (size_t j = 0; j < collected_data_point->gaze_data_count; ++j) {
             TobiiResearchGazeData* gaze_data = collected_data_point->gaze_data[j];
 
             point3_add(&gaze_origin_left_mean, &gaze_data->left_eye.gaze_origin.position_in_user_coordinates);
@@ -318,7 +328,7 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
             collected_data_point->gaze_data_count * sizeof(*direction_gaze_point_right_mean_all));
         vector3_set_zero(direction_gaze_point_right_mean_all);
 
-        for(size_t j = 0; j < collected_data_point->gaze_data_count; ++j) {
+        for (size_t j = 0; j < collected_data_point->gaze_data_count; ++j) {
             TobiiResearchGazeData* gaze_data = collected_data_point->gaze_data[j];
 
             vector3_create_from_points(&direction_gaze_point_left_all[j],
@@ -426,7 +436,7 @@ static void gaze_data_callback(TobiiResearchGazeData* gaze_data, void* user_data
     CalibrationValidator* validator = (CalibrationValidator*)user_data;
     int gaze_data_stored = 0;
 
-    switch(validator->state) {
+    switch (validator->state) {
         case CALIBRATION_VALIDATION_STATE_IDLE:
         case CALIBRATION_VALIDATION_STATE_CALIBRATION_MODE:
             /* Do nothing */
@@ -507,7 +517,7 @@ static void store_collected_data(CalibrationValidator* validator) {
     if (data_point) {
         /* Stimuli point already collected, add more data. */
         data_point->gaze_data = realloc(data_point->gaze_data,
-            (data_point->gaze_data_count + validator->new_point->gaze_data_count) * sizeof(data_point->gaze_data));
+            (data_point->gaze_data_count + validator->new_point->gaze_data_count) * sizeof(*data_point->gaze_data));
         for (size_t i = 0; i < validator->new_point->gaze_data_count; ++i) {
             data_point->gaze_data[data_point->gaze_data_count + i] = validator->new_point->gaze_data[i];
         }

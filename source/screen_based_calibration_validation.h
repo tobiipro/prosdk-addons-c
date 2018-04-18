@@ -1,3 +1,19 @@
+/*
+Copyright 2018 Tobii AB
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 #ifndef SCREEN_BASED_CALIBRATION_VALIDATION_H_
 #define SCREEN_BASED_CALIBRATION_VALIDATION_H_
 
@@ -8,12 +24,28 @@
 extern "C" {
 #endif
 
+#if defined(_WIN32) || defined(_WIN64)
+#ifdef TOBII_STATIC_LIB
+#define TOBII_RESEARCH_CALL
+#define TOBII_RESEARCH_API
+#else
+#define TOBII_RESEARCH_CALL __cdecl
+#ifdef TOBII_EXPORTING
+#define TOBII_RESEARCH_API __declspec(dllexport)
+#else
+#define TOBII_RESEARCH_API __declspec(dllimport)
+#endif /* TOBII_EXPORTING */
+#endif /* TOBII_STATIC_LIB */
+#else
+#define TOBII_RESEARCH_API
+#define TOBII_RESEARCH_CALL
+#endif /* _WIN32 */
+
 typedef enum {
     CALIBRATION_VALIDATION_STATUS_OK,
     CALIBRATION_VALIDATION_STATUS_INVALID_EYETRACKER,
     CALIBRATION_VALIDATION_STATUS_INVALID_SAMPLE_COUNT,
     CALIBRATION_VALIDATION_STATUS_INVALID_TIMEOUT,
-    CALIBRATION_VALIDATION_STATUS_REUSE_OR_UNINITIALIZED_VALIDATOR,
     CALIBRATION_VALIDATION_STATUS_NOT_IN_VALIDATION_MODE,
     CALIBRATION_VALIDATION_STATUS_ALREADY_IN_VALIDATION_MODE,
     CALIBRATION_VALIDATION_STATUS_OPERATION_NOT_ALLOWED_DURING_DATA_COLLECTION,
@@ -47,25 +79,34 @@ typedef struct {
 
 typedef struct CalibrationValidator CalibrationValidator;
 
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_init(
-    const char* address, size_t sample_count, int timeout, CalibrationValidator** validator);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_init_default(
-    const char* address, CalibrationValidator** validator);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_destroy(
-    CalibrationValidator* validator);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_init(
+        const char* address, size_t sample_count, int timeout, CalibrationValidator** validator);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_init_default(
+        const char* address, CalibrationValidator** validator);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_destroy(
+        CalibrationValidator* validator);
 
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_enter_validation_mode(
-    CalibrationValidator* validator);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_leave_validation_mode(
-    CalibrationValidator* validator);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_start_collecting_data(
-    CalibrationValidator* validator, const TobiiResearchNormalizedPoint2D* screen_point);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_clear_collected_data(
-    CalibrationValidator* validator);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_discard_collected_data(
-    CalibrationValidator* validator, const TobiiResearchNormalizedPoint2D* screen_point);
-extern CalibrationValidationStatus tobii_research_screen_based_calibration_validation_compute(
-    CalibrationValidator* validator, CalibrationValidationResult** result);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_enter_validation_mode(
+        CalibrationValidator* validator);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_leave_validation_mode(
+        CalibrationValidator* validator);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_start_collecting_data(
+        CalibrationValidator* validator, const TobiiResearchNormalizedPoint2D* screen_point);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_clear_collected_data(
+        CalibrationValidator* validator);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_discard_collected_data(
+        CalibrationValidator* validator, const TobiiResearchNormalizedPoint2D* screen_point);
+TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_compute(
+        CalibrationValidator* validator, CalibrationValidationResult** result);
 
 // TODO: Help function: convert status to string.
 // TODO: Help function: Free/destroy CalibrationValidationResult structure.

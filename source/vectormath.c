@@ -1,12 +1,28 @@
+/*
+Copyright 2018 Tobii AB
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 #include <math.h>
 
 #include  "vectormath.h"
 
-#define CLAMP(x, low, high)  (max(low, min(high, x)))
+#define CLAMP(x, low, high)  (fmax(low, fmin(high, x)))
 
 #define REL_TOL (1e-9)
 #define ABS_TOL (0.0)
-#define IS_CLOSE(a, b)  (fabs(a - b) <= max(REL_TOL * max(fabs(a), fabs(b)), ABS_TOL))
+#define IS_CLOSE(a, b)  (fabs(a - b) <= fmax(REL_TOL * fmax(fabs(a), fabs(b)), ABS_TOL))
 
 int point2_equal(const TobiiResearchNormalizedPoint2D* first, const TobiiResearchNormalizedPoint2D* second) {
     return IS_CLOSE(first->x, second->x) && IS_CLOSE(second->y, second->y);
@@ -64,7 +80,9 @@ double vector3_dot_product(const TobiiResearchVector3D* first, const TobiiResear
 }
 
 double vector3_magnitude(const TobiiResearchVector3D* vector) {
-    return sqrt((double)vector->x * (double)vector->x + (double)vector->y * (double)vector->y + (double)vector->z * (double)vector->z);
+    return sqrt((double)vector->x * (double)vector->x +
+                (double)vector->y * (double)vector->y +
+                (double)vector->z * (double)vector->z);
 }
 
 void vector3_normalize(TobiiResearchVector3D* vector) {

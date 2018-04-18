@@ -20,6 +20,8 @@ CLEANABLE_DIRS+=$(OBJECTSDIR)
 CLEANABLE_DIRS+=$(wildcard $(STAGE)/C*$(BITNESS))
 CLEANABLE_DIRS+=$(wildcard $(STAGE)/c_*$(BITNESS))
 
+TOBII_RESEARCH_LIB_Windows=$(STAGE)\CRelease$(BITNESS)\tobii_research.lib
+
 LN:=ln
 # Library version
 LIB_VER=$(versionmajor).$(versionminor).$(versionrelease)
@@ -28,8 +30,9 @@ TOBII_RESEARCH_LIB_NAME_Windows:=$(OUTPUT)/$(TOBII_RESEARCH_LIB).dll
 
 INCLUDES:= $(addprefix -I, $(INCLUDE_PATHS))
 
-CFLAGS_Windows:= /c /DTOBII_EXPORTING /Wall /wd4255 /wd4820 /WX /D_CRT_SECURE_NO_WARNINGS /EHsc /nologo
-LDFLAGS_Windows+= /nologo
+CFLAGS_Windows:= /c /DTOBII_EXPORTING /Wall /wd4255 /wd4820 /WX /D_CRT_SECURE_NO_WARNINGS /D_USE_MATH_DEFINES /EHsc /nologo
+LDFLAGS_Windows+= /DLL /DEBUG $(TOBII_RESEARCH_LIB_$(OS)) /nologo
+
 
 C_BINDING_HEADERS:=$(addprefix $(OUTPUT)/, $(notdir $(C_BINDING_INTERFACE_FILES)))
 
@@ -42,7 +45,7 @@ c_addons: release
 $(OBJECTSDIR)/%.o:%.c
 	@$(CC) $(CFLAGS) $(INCLUDES) $< $(C_OUTPUT_$(OS))$@
 
-$(OUTPUT)/%.h:include$(PATH_SEPARATOR)%.h
+$(OUTPUT)/%.h:source$(PATH_SEPARATOR)%.h
 	@$(CP) "$<" "$@"
 
 
