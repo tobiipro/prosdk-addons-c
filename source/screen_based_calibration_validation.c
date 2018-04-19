@@ -18,9 +18,6 @@ limitations under the License.
 #include <stdlib.h>
 #include <math.h>
 
-#include "tobii_research.h"
-#include "tobii_research_streams.h"
-
 #include "screen_based_calibration_validation.h"
 #include "vectormath.h"
 #include "stopwatch.h"
@@ -96,6 +93,9 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_i
         free(*validator);
         return CALIBRATION_VALIDATION_STATUS_INVALID_EYETRACKER;
     }
+    if ((*validator)->eyetracker == NULL) {
+        return CALIBRATION_VALIDATION_STATUS_INTERNAL_ERROR;
+    }
 
     (*validator)->sample_count = sample_count;
     (*validator)->timeout = timeout;
@@ -147,8 +147,9 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_e
 
     TobiiResearchStatus status = tobii_research_subscribe_to_gaze_data(
         validator->eyetracker, gaze_data_callback, validator);
-    if (status != TOBII_RESEARCH_STATUS_OK)
+    if (status != TOBII_RESEARCH_STATUS_OK) {
         return CALIBRATION_VALIDATION_STATUS_INTERNAL_ERROR;
+    }
 
     destroy_collected_data(validator);  /* Erase collected data from earlier validation runs */
     create_collected_data(validator);
@@ -430,6 +431,16 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
     *result = result_tmp;
 
     return CALIBRATION_VALIDATION_STATUS_OK;
+}
+
+int tobii_research_screen_based_calibration_validation_is_validation_mode(
+    CalibrationValidator* validator) {
+    return validator->state != CALIBRATION_VALIDATION_STATE_IDLE;
+}
+
+int tobii_research_screen_based_calibration_validation_is_collecting_data(
+    CalibrationValidator* validator) {
+    return validator->state == CALIBRATION_VALIDATION_STATE_COLLECTING_DATA;
 }
 
 static void gaze_data_callback(TobiiResearchGazeData* gaze_data, void* user_data) {

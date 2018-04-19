@@ -20,9 +20,9 @@ limitations under the License.
 
 #define CLAMP(x, low, high)  (fmax(low, fmin(high, x)))
 
-#define REL_TOL (1e-9)
-#define ABS_TOL (0.0)
-#define IS_CLOSE(a, b)  (fabs(a - b) <= fmax(REL_TOL * fmax(fabs(a), fabs(b)), ABS_TOL))
+#define REL_TOL (1e-9f)
+#define ABS_TOL (0.0f)
+#define IS_CLOSE(a, b)  (fabsf(a - b) <= fmaxf(REL_TOL * fmaxf(fabsf(a), fabsf(b)), ABS_TOL))
 
 int point2_equal(const TobiiResearchNormalizedPoint2D* first, const TobiiResearchNormalizedPoint2D* second) {
     return IS_CLOSE(first->x, second->x) && IS_CLOSE(second->y, second->y);

@@ -108,6 +108,13 @@ TOBII_RESEARCH_API CalibrationValidationStatus TOBII_RESEARCH_CALL
     tobii_research_screen_based_calibration_validation_compute(
         CalibrationValidator* validator, CalibrationValidationResult** result);
 
+TOBII_RESEARCH_API int TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_is_validation_mode(
+        CalibrationValidator* validator);
+TOBII_RESEARCH_API int TOBII_RESEARCH_CALL
+    tobii_research_screen_based_calibration_validation_is_collecting_data(
+        CalibrationValidator* validator);
+
 // TODO: Help function: convert status to string.
 // TODO: Help function: Free/destroy CalibrationValidationResult structure.
 
