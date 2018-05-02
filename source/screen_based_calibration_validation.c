@@ -251,6 +251,9 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
     if (validator->state == CALIBRATION_VALIDATION_STATE_COLLECTING_DATA) {
         return CALIBRATION_VALIDATION_STATUS_OPERATION_NOT_ALLOWED_DURING_DATA_COLLECTION;
     }
+    if (validator->collected_points_count == 0) {
+        return CALIBRATION_VALIDATION_STATUS_NO_DATA_COLLECTED;
+    }
 
     TobiiResearchDisplayArea display_area;
     TobiiResearchStatus status = tobii_research_get_display_area(validator->eyetracker, &display_area);
