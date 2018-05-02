@@ -25,7 +25,7 @@ limitations under the License.
 #define IS_CLOSE(a, b)  (fabsf(a - b) <= fmaxf(REL_TOL * fmaxf(fabsf(a), fabsf(b)), ABS_TOL))
 
 int point2_equal(const TobiiResearchNormalizedPoint2D* first, const TobiiResearchNormalizedPoint2D* second) {
-    return IS_CLOSE(first->x, second->x) && IS_CLOSE(second->y, second->y);
+    return IS_CLOSE(first->x, second->x) && IS_CLOSE(first->y, second->y);
 }
 
 void point3_set_zero(TobiiResearchPoint3D* point) {

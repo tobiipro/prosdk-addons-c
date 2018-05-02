@@ -8,8 +8,6 @@ C_BINDING_INTERFACE_FILES:=source/screen_based_calibration_validation.h \
 
 TOBII_RESEARCH_LIB:=tobii_research_addons
 
-OS=Windows
-
 C_BINDING_OBJECTS:=$(C_BINDING_SOURCES:%.c=$(OBJECTSDIR)/%.o)
 
 INCLUDE_PATHS:=	$(STAGE)/CRelease$(BITNESS)
@@ -30,7 +28,7 @@ TOBII_RESEARCH_LIB_NAME_Windows:=$(OUTPUT)/$(TOBII_RESEARCH_LIB).dll
 
 INCLUDES:= $(addprefix -I, $(INCLUDE_PATHS))
 
-CFLAGS_Windows:= /c /DTOBII_EXPORTING /Wall /wd4255 /wd4820 /WX /D_CRT_SECURE_NO_WARNINGS /D_USE_MATH_DEFINES /EHsc /nologo
+CFLAGS_Windows:= /c /DTOBII_EXPORTING /Wall /wd4255 /wd4820 /wd4710 /WX /D_CRT_SECURE_NO_WARNINGS /D_USE_MATH_DEFINES /EHsc /nologo
 LDFLAGS_Windows+= /DLL /DEBUG $(TOBII_RESEARCH_LIB_$(OS)) /nologo
 
 
