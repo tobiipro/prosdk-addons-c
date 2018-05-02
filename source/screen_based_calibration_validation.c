@@ -526,7 +526,6 @@ static void create_collected_data(CalibrationValidator* validator) {
 }
 
 static void extend_collected_data(CalibrationValidator* validator) {
-    printf("extend_collected_data\n");
     validator->collected_points_capacity *= 2;
     validator->collected_points = realloc(validator->collected_points,
         validator->collected_points_capacity * sizeof(*validator->collected_points));
