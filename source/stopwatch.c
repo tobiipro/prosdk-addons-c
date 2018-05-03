@@ -16,6 +16,8 @@ limitations under the License.
 
 #include "stopwatch.h"
 
+#include <stdlib.h>
+
 #if defined(_WIN32) || defined(_WIN64)
 
 #include <windows.h>
@@ -43,15 +45,17 @@ Stopwatch* stopwatch_init() {
 }
 
 void stopwatch_start(Stopwatch* instance) {
-    if (instance->running)
+    if (instance->running) {
         return;
+    }
     QueryPerformanceCounter(&instance->last_start_time);
     instance->running = 1;
 }
 
 long stopwatch_stop(Stopwatch* instance) {
-    if (!instance->running)
+    if (!instance->running) {
         return -1;
+    }
     instance->running = 0;
     LARGE_INTEGER stop_time;
     QueryPerformanceCounter(&stop_time);
@@ -76,31 +80,106 @@ void stopwatch_reset(Stopwatch* instance) {
     instance->running = 0;
 }
 
+#elif defined(__APPLE__) || defined(__MACH__)
+
+#include <sys/time.h>
+
+struct Stopwatch {
+    struct timeval start;
+    long total_time;
+    int running;
+};
+
+Stopwatch* stopwatch_init() {
+    Stopwatch* instance = malloc(sizeof(*instance));
+    stopwatch_reset(instance);
+    return instance;
+}
+
+void stopwatch_start(Stopwatch* instance) {
+    if (instance->running) {
+        return;
+    }
+    gettimeofday(&instance->start, NULL);
+    instance->running = 1;
+}
+
+long stopwatch_stop(Stopwatch* instance) {
+    if (!instance->running) {
+        return -1;
+    }
+    struct timeval stop;
+    gettimeofday(&stop, NULL);
+    instance->total_time += (stop.tv_sec - instance->start.tv_sec) * 1000 +
+        (stop.tv_usec - instance->start.tv_usec) / 1000;
+    instance->running = 0;
+    return instance->total_time;
+}
+
+long stopwatch_elapsed(Stopwatch* instance) {
+    if (!instance->running) {
+        return 0;
+    }
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return instance->total_time + (now.tv_sec - instance->start.tv_sec) * 1000 +
+        (now.tv_usec - instance->start.tv_usec) / 1000;
+}
+
+void stopwatch_reset(Stopwatch* instance) {
+    instance->total_time = 0;
+    instance->running = 0;
+}
+
 #else
 
 #include <time.h>
 
+struct Stopwatch {
+    struct timespec start;
+    long total_time;
+    int running;
+};
+
 Stopwatch* stopwatch_init() {
-    // TODO: Implement
-    return NULL;
+    Stopwatch* instance = malloc(sizeof(*instance));
+    stopwatch_reset(instance);
+    return instance;
 }
 
 void stopwatch_start(Stopwatch* instance) {
-    // TODO: Implement
+    if (instance->running) {
+        return;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &instance->start);
+    instance->running = 1;
 }
 
 long stopwatch_stop(Stopwatch* instance) {
-    // TODO: Implement
-    return 0;
+    if (!instance->running) {
+        return -1;
+    }
+    struct timespec stop;
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    instance->total_time += (stop.tv_sec - instance->start.tv_sec) * 1000 +
+        (stop.tv_nsec - instance->start.tv_nsec) / 1000000;
+    instance->running = 0;
+    return instance->total_time;
 }
 
 long stopwatch_elapsed(Stopwatch* instance) {
-    // TODO: Implement
-    return 0;
+    if (!instance->running) {
+        return 0;
+    }
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return instance->total_time + (now.tv_sec - instance->start.tv_sec) * 1000 +
+        (now.tv_nsec - instance->start.tv_nsec) / 1000000;
 }
 
 void stopwatch_reset(Stopwatch* instance) {
-    // TODO: Implement
+    instance->total_time = 0;
+    instance->running = 0;
 }
 
 #endif

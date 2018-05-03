@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "screen_based_calibration_validation.h"
@@ -43,7 +44,7 @@ typedef struct {
 
 struct CalibrationValidator {
     TobiiResearchEyeTracker* eyetracker;
-    CalibrationValidationState state;  // TODO: Investigate if synchronization is needed for state variable
+    CalibrationValidationState state;
     size_t sample_count;
     int timeout;
 
