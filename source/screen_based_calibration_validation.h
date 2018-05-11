@@ -143,7 +143,7 @@ typedef struct {
     The gaze data samples collected for this point. These samples are the base for the
     calculated accuracy and precision.
     */
-    TobiiResearchGazeData** gaze_data;
+    TobiiResearchGazeData* gaze_data;
     /**
     Number of gaze data samples collected for this point.
     */

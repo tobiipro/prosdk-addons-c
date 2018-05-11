@@ -66,7 +66,7 @@ static CollectedDataPoint* create_data_point(CalibrationValidator* validator,
     const TobiiResearchNormalizedPoint2D* screen_point);
 static void destroy_data_point(CollectedDataPoint* data_point);
 
-static void create_collected_data(CalibrationValidator* validator);
+static void init_collected_data(CalibrationValidator* validator);
 static void extend_collected_data(CalibrationValidator* validator);
 static void store_collected_data(CalibrationValidator* validator);
 static void destroy_collected_data(CalibrationValidator* validator);
@@ -87,7 +87,7 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_i
         return CALIBRATION_VALIDATION_STATUS_INVALID_TIMEOUT;
     }
 
-    *validator = calloc(1, sizeof(CalibrationValidator));
+    *validator = malloc(sizeof(CalibrationValidator));
 
     TobiiResearchStatus status = tobii_research_get_eyetracker(address, &(*validator)->eyetracker);
     if (status != TOBII_RESEARCH_STATUS_OK) {
@@ -152,8 +152,7 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_e
         return CALIBRATION_VALIDATION_STATUS_INTERNAL_ERROR;
     }
 
-    destroy_collected_data(validator);  /* Erase collected data from earlier validation runs */
-    create_collected_data(validator);
+    init_collected_data(validator);
 
     validator->state = CALIBRATION_VALIDATION_STATE_CALIBRATION_MODE;
 
@@ -173,6 +172,10 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_l
     if (status != TOBII_RESEARCH_STATUS_OK) {
         return CALIBRATION_VALIDATION_STATUS_INTERNAL_ERROR;
     }
+
+    destroy_data_point(validator->new_point);
+    validator->new_point = NULL;
+    destroy_collected_data(validator);
 
     validator->state = CALIBRATION_VALIDATION_STATE_IDLE;
 
@@ -194,9 +197,9 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_s
 
     destroy_data_point(validator->new_point);
     validator->new_point = create_data_point(validator, screen_point);
-
     stopwatch_reset(validator->stopwatch);
     stopwatch_start(validator->stopwatch);
+
     validator->state = CALIBRATION_VALIDATION_STATE_COLLECTING_DATA;
 
     return CALIBRATION_VALIDATION_STATUS_OK;
@@ -207,10 +210,13 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
     if (validator->state == CALIBRATION_VALIDATION_STATE_COLLECTING_DATA) {
         return CALIBRATION_VALIDATION_STATUS_OPERATION_NOT_ALLOWED_DURING_DATA_COLLECTION;
     }
+
     destroy_data_point(validator->new_point);
     validator->new_point = NULL;
     destroy_collected_data(validator);
-    create_collected_data(validator);
+    if (validator->state == CALIBRATION_VALIDATION_STATE_CALIBRATION_MODE) {
+        init_collected_data(validator);
+    }
 
     return CALIBRATION_VALIDATION_STATUS_OK;
 }
@@ -285,10 +291,11 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
             points[i].precision_rms_right_eye = NAN;
             points[i].timed_out = 1;
             points[i].screen_point = collected_data_point->screen_point;
-            points[i].gaze_data = collected_data_point->gaze_data;
+            points[i].gaze_data = malloc(collected_data_point->gaze_data_count * sizeof(TobiiResearchGazeData));
+            for (size_t j = 0; j < collected_data_point->gaze_data_count; ++j) {
+                memcpy(&points[i].gaze_data[j], collected_data_point->gaze_data[j], sizeof(TobiiResearchGazeData));
+            }
             points[i].gaze_data_count = collected_data_point->gaze_data_count;
-            collected_data_point->gaze_data = NULL;
-            collected_data_point->gaze_data_count = 0;
             continue;
         }
 
@@ -391,10 +398,11 @@ CalibrationValidationStatus tobii_research_screen_based_calibration_validation_c
         points[i].precision_rms_right_eye = precision_rms_right_eye;
         points[i].timed_out = 0;
         points[i].screen_point = collected_data_point->screen_point;
-        points[i].gaze_data = collected_data_point->gaze_data;
+        points[i].gaze_data = malloc(collected_data_point->gaze_data_count * sizeof(TobiiResearchGazeData));
+        for (size_t j = 0; j < collected_data_point->gaze_data_count; ++j) {
+            memcpy(&points[i].gaze_data[j], collected_data_point->gaze_data[j], sizeof(TobiiResearchGazeData));
+        }
         points[i].gaze_data_count = collected_data_point->gaze_data_count;
-        collected_data_point->gaze_data = NULL;
-        collected_data_point->gaze_data_count = 0;
 
         /* Ackumulate values for average calculation */
         accuracy_left_eye_average += accuracy_left_eye;
@@ -443,9 +451,6 @@ void tobii_research_screen_based_calibration_validation_destroy_result(
         if (result->points_count) {
             for (size_t i = 0; i < result->points_count; ++i) {
                 if (result->points[i].gaze_data_count) {
-                    for (size_t j = 0; j < result->points[i].gaze_data_count; ++j) {
-                        free(result->points[i].gaze_data[j]);
-                    }
                     free(result->points[i].gaze_data);
                 }
             }
@@ -484,7 +489,7 @@ static void gaze_data_callback(TobiiResearchGazeData* gaze_data, void* user_data
                     gaze_data->right_eye.gaze_point.validity == TOBII_RESEARCH_VALIDITY_VALID) {
                     /* Store gaze data sample. */
                     validator->new_point->gaze_data[validator->new_point->gaze_data_count] =
-                        malloc(sizeof(TobiiResearchGazeData));
+                        malloc(sizeof(*gaze_data));
                     memcpy(validator->new_point->gaze_data[validator->new_point->gaze_data_count],
                         gaze_data, sizeof(*gaze_data));
                     validator->new_point->gaze_data_count++;
@@ -513,29 +518,24 @@ static CollectedDataPoint* create_data_point(CalibrationValidator* validator,
 
 static void destroy_data_point(CollectedDataPoint* data_point) {
     if (data_point) {
-        if (data_point->gaze_data_count > 0) {
-            for (size_t i = 0; i < data_point->gaze_data_count; ++i) {
-                free(data_point->gaze_data[i]);
-            }
-            free(data_point->gaze_data);
+        for (size_t i = 0; i < data_point->gaze_data_count; ++i) {
+            free(data_point->gaze_data[i]);
         }
+        free(data_point->gaze_data);
         free(data_point);
     }
 }
 
-static void create_collected_data(CalibrationValidator* validator) {
+static void init_collected_data(CalibrationValidator* validator) {
     validator->collected_points_capacity = 5;
     validator->collected_points_count = 0;
-    validator->collected_points = calloc(validator->collected_points_capacity, sizeof(*validator->collected_points));
+    validator->collected_points = malloc(validator->collected_points_capacity * sizeof(*validator->collected_points));
 }
 
 static void extend_collected_data(CalibrationValidator* validator) {
     validator->collected_points_capacity *= 2;
     validator->collected_points = realloc(validator->collected_points,
         validator->collected_points_capacity * sizeof(*validator->collected_points));
-    for (size_t i = validator->collected_points_count; i < validator->collected_points_capacity; ++i) {
-        validator->collected_points[i] = NULL;
-    }
 }
 
 static void store_collected_data(CalibrationValidator* validator) {
@@ -574,10 +574,7 @@ static void destroy_collected_data(CalibrationValidator* validator) {
             for (size_t j = 0; j < validator->collected_points[i]->gaze_data_count; ++j) {
                 free(validator->collected_points[i]->gaze_data[j]);
             }
-            if (validator->collected_points[i]->gaze_data) {
-                /* It might have been moved to result after a computation. */
-                free(validator->collected_points[i]->gaze_data);
-            }
+            free(validator->collected_points[i]->gaze_data);
             free(validator->collected_points[i]);
         }
         free(validator->collected_points);
