@@ -1,0 +1,10 @@
+# Tobii Pro SDK C directory
+sdk/
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+
+# Build results
+win32/Output
+win32/sample
+win32/tobii_research_addons
