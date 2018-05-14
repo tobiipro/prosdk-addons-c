@@ -14,19 +14,33 @@ Do not hesitate to contribute to this project and create issues if you find some
 
 ## Installation
 
+### Common instructions
+
 * Download or clone this folder.
 * Download the Tobii Pro SDK C for your operating system.
-* Unpack the Tobii Pro SDK archive to a new directory _sdk_ in root of the addons folder.
 
 ### For Windows
 
+* Unzip the Tobii Pro SDK archive to a new directory _sdk_ in root of the addons folder.
 * Open Visual Studio and load the solution in the win32 directory.
 * Build for the desired configuration (i.e. Debug/Release and x86/x64).
 * In order to use the library you need to manually load two DLLs (*tobii_research_addons.dll* and *tobii_research.dll*) in your source or link against their respective lib file. See sample project.
 
 ### For Linux
 
-* TODO
+* Extract the Tobii Pro SDK tarball to a new directory _sdk_ in root of the addons folder:
+```
+mkdir sdk
+tar -xf <TobiiPro.SDK.C_Binding.LINUX.tar.gz> -C sdk
+```
+* Build everything with make:
+```
+make all
+```
+* In order to use the library you need to link against two shared libraries: *libtobii_research.so* and *libtobii_research_addons.so*. E.g.:
+```
+gcc -o test test.c -ltobii_research -ltobii_research_addons
+```
 
 ### For Mac OS X:
 
