@@ -5,12 +5,12 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
-inline void sleep_ms(int time) {
+static void sleep_ms(int time) {
     Sleep(time);
 }
 #else
 #include <unistd.h>
-inline void sleep_ms(int time) {
+static void sleep_ms(int time) {
     usleep(time * 1000);
 }
 #endif
