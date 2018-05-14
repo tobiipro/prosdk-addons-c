@@ -8,3 +8,5 @@ sdk/
 win32/Output
 win32/sample
 win32/tobii_research_addons
+
+build/

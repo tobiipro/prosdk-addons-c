@@ -1,86 +1,49 @@
-C_BINDING_SOURCES:=source/screen_based_calibration_validation.c \
-	source/vectormath.c \
-	source/stopwatch.c
+CC = gcc
+CFLAGS = -Wall -Werror -fPIC -I$(SDK_DIR)/$(BITNESS)/include
+LDFLAGS =
+MKDIR_P = mkdir -p
+RM = rm -f
 
-C_BINDING_INTERFACE_FILES:=source/screen_based_calibration_validation.h \
-	source/vectormath.h \
-	source/stopwatch.h
+BITNESS = $(shell getconf LONG_BIT)
 
-TOBII_RESEARCH_LIB:=tobii_research_addons
+BUILD_DIR = ./build
+SDK_DIR = ./sdk
 
-C_BINDING_OBJECTS:=$(C_BINDING_SOURCES:%.c=$(OBJECTSDIR)/%.o)
+TARGET_LIB = tobii_research_addons.so
+TOBII_PRO_SDK_C_LIB = libtobii_research.so
 
-INCLUDE_PATHS:=	$(STAGE)/CRelease$(BITNESS)
+OBJS = $(BUILD_DIR)/screen_based_calibration_validation.o \
+	$(BUILD_DIR)/vectormath.o \
+	$(BUILD_DIR)/stopwatch.o
 
-DIRS+=$(OBJECTSDIR)
-DIRS+=$(OUTPUT)
-CLEANABLE_DIRS+=$(OBJECTSDIR)
-CLEANABLE_DIRS+=$(wildcard $(STAGE)/C*$(BITNESS))
-CLEANABLE_DIRS+=$(wildcard $(STAGE)/c_*$(BITNESS))
+.PHONY: all
+all: directories $(BUILD_DIR)/${TARGET_LIB} #$(BUILD_DIR)/sample
 
-TOBII_RESEARCH_LIB_Windows=$(STAGE)\CRelease$(BITNESS)\tobii_research.lib
+directories: $(BUILD_DIR)
 
-LN:=ln
-# Library version
-LIB_VER=$(versionmajor).$(versionminor).$(versionrelease)
+$(BUILD_DIR):
+	@$(MKDIR_P) $(BUILD_DIR)
 
-TOBII_RESEARCH_LIB_NAME_Windows:=$(OUTPUT)/$(TOBII_RESEARCH_LIB).dll
+$(BUILD_DIR)/$(TARGET_LIB): $(OBJS)
+	@$(CC) ${LDFLAGS} -shared -o $@ $^
+	@cp $(SDK_DIR)/$(BITNESS)/lib/*.* $(BUILD_DIR)
 
-INCLUDES:= $(addprefix -I, $(INCLUDE_PATHS))
+#$(BUILD_DIR)/sample: $(BUILD_DIR)/sample.o
+#	@$(CC) $(LDFLAGS) -L$(BUILD_DIR) -l:$(TOBII_PRO_SDK_C_LIB) -l:$(TARGET_LIB) -o $@ $^
 
-CFLAGS_Windows:= /c /DTOBII_EXPORTING /Wall /wd4255 /wd4820 /wd4710 /WX /D_CRT_SECURE_NO_WARNINGS /D_USE_MATH_DEFINES /EHsc /nologo
-LDFLAGS_Windows+= /DLL /DEBUG $(TOBII_RESEARCH_LIB_$(OS)) /nologo
+#$(BUILD_DIR)/sample.o: source/sample.c source/screen_based_calibration_validation.h
+#	@$(CC) -c $(CFLAGS) $< -o $@
 
+$(BUILD_DIR)/screen_based_calibration_validation.o: source/screen_based_calibration_validation.c source/screen_based_calibration_validation.h
+	@$(CC) -c $(CFLAGS) -DTOBII_EXPORTING  $< -o $@
 
-C_BINDING_HEADERS:=$(addprefix $(OUTPUT)/, $(notdir $(C_BINDING_INTERFACE_FILES)))
+$(BUILD_DIR)/vectormath.o: source/vectormath.c source/vectormath.h
+	@$(CC) -c $(CFLAGS) $< -o $@
 
-c_addons: release
+$(BUILD_DIR)/stopwatch.o: source/stopwatch.c source/stopwatch.h
+	@$(CC) -c $(CFLAGS) $< -o $@
 
-%:
-	@echo "Ignoring $@ target in the source Makefile"
+.PHONY: clean
+clean:
+	@${RM} -r $(BUILD_DIR)
 
-
-$(OBJECTSDIR)/%.o:%.c
-	@$(CC) $(CFLAGS) $(INCLUDES) $< $(C_OUTPUT_$(OS))$@
-
-$(OUTPUT)/%.h:source$(PATH_SEPARATOR)%.h
-	@$(CP) "$<" "$@"
-
-
-C_BINDING_LIB=$(STAGE)/CRelease$(BITNESS)
-
-$(C_BINDING_DEP): $(C_BINDING_LIB)
-	@echo "copying $(filter %$(PATH_SEPARATOR)$(@F), $+) to $@"
-	@$(CP) "$(filter %$(PATH_SEPARATOR)$(@F), $+)" "$@"
-
-$(TOBII_RESEARCH_LIB_NAME_Windows):$(C_BINDING_HEADERS)
-$(TOBII_RESEARCH_LIB_NAME_Windows):CFLAGS+=$(CFLAGS_Windows)
-$(TOBII_RESEARCH_LIB_NAME_Windows):$(DIRS) $(C_BINDING_OBJECTS) $(C_BINDING_DEP)
-	@echo "Linking $@"
-	@$(LINKER) $(filter %.res, $+) $(filter %.o, $+) $(LDFLAGS_$(OS)) $(LD_OUTPUT_$(OS))"$@"
-
-$(DIRS):
-	@echo "Creating $@"
-	@$(MKDIR) "$@"
-
-.PHONY: c_addons_clean
-c_addons_clean:
-	@echo "Cleaning $(CLEANABLE_DIRS)"
-ifeq ($(OS), Windows)
-	$(foreach dir, $(wildcard $(CLEANABLE_DIRS)), rmdir /S /Q "$(dir)" &)
-else
-	@$(foreach dir, $(CLEANABLE_DIRS), $(RM) "$(dir)")
-endif
-
-.PHONY: release
-release: print $(TOBII_RESEARCH_LIB_NAME_$(OS)) c_addons_cpplint
-	@echo "Building source..." $(TOBII_RESEARCH_LIB_NAME_$(OS))
-
-print:
-	@echo "OBJECTSDIR":$(OBJECTSDIR)
-	@echo "C_BINDING_OBJECTS":$(C_BINDING_OBJECTS)
-
-.PHONY: c_addons_cpplint
-c_addons_cpplint:
-	@echo "CppLint"
-	@$(PYTHON) -m cpplint $(SOURCES) $(C_BINDING_SOURCES) $(C_BINDING_INTERFACE_FILES)
