@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Werror -fPIC -I$(SDK_DIR)/$(BITNESS)/include
+CFLAGS = -Wall -Werror -I$(SDK_DIR)/$(BITNESS)/include
 LDFLAGS =
 MKDIR_P = mkdir -p
 RM = rm -f
@@ -9,8 +9,7 @@ BITNESS = $(shell getconf LONG_BIT)
 BUILD_DIR = ./build
 SDK_DIR = ./sdk
 
-TARGET_LIB = tobii_research_addons.so
-TOBII_PRO_SDK_C_LIB = libtobii_research.so
+TARGET_LIB = libtobii_research_addons.so
 
 OBJS = $(BUILD_DIR)/screen_based_calibration_validation.o \
 	$(BUILD_DIR)/vectormath.o \
@@ -29,19 +28,19 @@ $(BUILD_DIR)/$(TARGET_LIB): $(OBJS)
 	@cp $(SDK_DIR)/$(BITNESS)/lib/*.* $(BUILD_DIR)
 
 #$(BUILD_DIR)/sample: $(BUILD_DIR)/sample.o
-#	@$(CC) $(LDFLAGS) -L$(BUILD_DIR) -l:$(TOBII_PRO_SDK_C_LIB) -l:$(TARGET_LIB) -o $@ $^
+#	$(CC) $(LDFLAGS) -L$(BUILD_DIR) -ltobii_research -ltobii_research_addons -o $@ $^
 
 #$(BUILD_DIR)/sample.o: source/sample.c source/screen_based_calibration_validation.h
-#	@$(CC) -c $(CFLAGS) $< -o $@
+#	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/screen_based_calibration_validation.o: source/screen_based_calibration_validation.c source/screen_based_calibration_validation.h
-	@$(CC) -c $(CFLAGS) -DTOBII_EXPORTING  $< -o $@
+	@$(CC) -c -fPIC $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/vectormath.o: source/vectormath.c source/vectormath.h
-	@$(CC) -c $(CFLAGS) $< -o $@
+	@$(CC) -c -fPIC $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/stopwatch.o: source/stopwatch.c source/stopwatch.h
-	@$(CC) -c $(CFLAGS) $< -o $@
+	@$(CC) -c -fPIC $(CFLAGS) $< -o $@
 
 .PHONY: clean
 clean:
