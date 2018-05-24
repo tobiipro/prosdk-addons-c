@@ -46,3 +46,6 @@ $(BUILD_DIR)/stopwatch.o: source/stopwatch.c source/stopwatch.h
 clean:
 	@${RM} -r $(BUILD_DIR)
 
+
+%:
+	@echo "Ignoring $@ target in C Addons Makefile"
