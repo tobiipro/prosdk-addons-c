@@ -1,34 +1,50 @@
-CC = gcc
-CFLAGS = -Wall -Werror -I$(SDK_DIR)/$(BITNESS)/include
-LDFLAGS = -Wl,-rpath='$$ORIGIN'
-MKDIR_P = mkdir -p
-RM = rm -f
+UNAME:=$(shell uname -s)
+ifeq ($(UNAME), Linux)
+	OS=LINUX
+	LIB_EXT=so
+	CC:=gcc
+	LINKER:=g++
+else ifeq ($(UNAME), Darwin)
+	OS=OSX
+	LIB_EXT=dylib
+	CC:=clang
+	CXX:=clang++
+else
+	$(error "Operating System not supported.")
+endif
 
-BITNESS = $(shell getconf LONG_BIT)
+BITNESS=$(shell getconf LONG_BIT)
 
-BUILD_DIR = ./build
-SDK_DIR = ./sdk
+MKDIR_P=mkdir -p
+RM=rm -f
 
-TARGET_LIB = libtobii_research_addons.so
+BUILD_DIR=./build
+SDK_DIR=./sdk
 
-OBJS = $(BUILD_DIR)/screen_based_calibration_validation.o \
+CFLAGS=-Wall -Werror -I$(SDK_DIR)/$(BITNESS)/include
+LDFLAGS_LINUX=-Wl,-rpath='$$ORIGIN'
+LDFLAGS_OSX=-m$(BITNESS) -Wl,-rpath,@executable_path -Wl,-L$(SDK_DIR)/$(BITNESS)/lib
+
+LDFLAGS_$(OS)+=-ltobii_research -lm
+
+TARGET_LIB=libtobii_research_addons.$(LIB_EXT)
+
+OBJS=$(BUILD_DIR)/screen_based_calibration_validation.o \
 	$(BUILD_DIR)/vectormath.o \
 	$(BUILD_DIR)/stopwatch.o
 
 .PHONY: all
-all: directories $(BUILD_DIR)/${TARGET_LIB} $(BUILD_DIR)/sample
-
-directories: $(BUILD_DIR)
+all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET_LIB) $(BUILD_DIR)/sample
 
 $(BUILD_DIR):
 	@$(MKDIR_P) $(BUILD_DIR)
 
 $(BUILD_DIR)/$(TARGET_LIB): $(OBJS)
-	@$(CC) ${LDFLAGS} -shared -o $@ $^
+	@$(CC) $(LDFLAGS_$(OS)) -shared -o $@ $^
 	@cp $(SDK_DIR)/$(BITNESS)/lib/*.* $(BUILD_DIR)
 
 $(BUILD_DIR)/sample: $(BUILD_DIR)/sample.o
-	@$(CC) $(LDFLAGS) -L$(BUILD_DIR) -o $@ $^ -ltobii_research_addons -ltobii_research -lm
+	@$(CC) $(LDFLAGS_$(OS)) -L$(BUILD_DIR) -o $@ $^ -ltobii_research_addons
 
 $(BUILD_DIR)/sample.o: source/sample.c source/screen_based_calibration_validation.h
 	@$(CC) -c $(CFLAGS) $< -o $@
@@ -44,7 +60,7 @@ $(BUILD_DIR)/stopwatch.o: source/stopwatch.c source/stopwatch.h
 
 .PHONY: clean
 clean:
-	@${RM} -r $(BUILD_DIR)
+	@$(RM) -r $(BUILD_DIR)
 
 
 %:
