@@ -7,8 +7,8 @@ Add-ons for the Tobii Pro SDK.
 
 
 The Tobii Pro SDK is available at: https://www.tobiipro.com/product-listing/tobii-pro-sdk/ <br/>
-Documentation to the API: http://developer.tobiipro.com/python.html
-Getting started: http://developer.tobiipro.com/c/c-getting-started.html
+Documentation to the API: http://developer.tobiipro.com/c.html <br/>
+Getting started: http://developer.tobiipro.com/c/c-getting-started.html <br/>
 
 Do not hesitate to contribute to this project and create issues if you find something that might be wrong or could be improved.
 
@@ -42,15 +42,27 @@ make all
 gcc -o test test.c -ltobii_research -ltobii_research_addons
 ```
 
-### For Mac OS X:
+### For macOS:
 
-* TODO
+* Extract the Tobii Pro SDK tarball to a new directory _sdk_ in root of the addons folder:
+```
+mkdir sdk
+tar -xf TobiiPro.SDK.C_Binding.OSX.tar.gz -C sdk
+```
+* Build everything with make:
+```
+make all
+```
+* In order to use the library you need to link against two shared libraries: *libtobii_research.so* and *libtobii_research_addons.so*. E.g.:
+```
+clang -o test test.c -ltobii_research -ltobii_research_addons
+```
 
 ## Features
 
 ### Calibration Validation
 
-The package contains functionality for validating calibrations by calculating various statistics for different stimuli points. Note: There are no functionality for actually presenting the stimuli points on screen.
+The package contains functionality for validating calibrations by calculating various statistics for different stimuli points. Note: There is no functionality for actually presenting the stimuli points on screen.
 
 #### Example
 
